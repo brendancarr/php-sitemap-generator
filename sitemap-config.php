@@ -35,4 +35,10 @@ return array(
 
     // Date changed (today's date)
     "LAST_UPDATED" => date('Y-m-d'),
+    
+    //filetype extensions to not add to the sitemap
+    "SKIP_EXTENSIONS" => array("jpg", "png"),
+    
+    //remove the slash at the end of each URL
+    "REMOVE_LAST_SLASH" => true
 );

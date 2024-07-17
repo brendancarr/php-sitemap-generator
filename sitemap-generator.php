@@ -72,6 +72,25 @@ class SitemapGenerator
 		foreach ($anchors as $a) {
 			$next_url = $a->getAttribute('href');
 
+            // Should remove the / at the end, causing duplicates
+            if ($this->config['REMOVE_LAST_SLASH']) {
+                if (substr($next_url, -1) == "/") {
+					continue;
+				}
+            }
+            
+            // Should do this first, so it doesn't require additional resources if it's not an internal link
+            // Check if the given url is external, if yes it will skip the iteration
+			// This code will only run if you set ALLOW_EXTERNAL_LINKS to false in the config.
+			if (!$this->config['ALLOW_EXTERNAL_LINKS']) {
+				$parsed_url = parse_url($next_url);
+				if (isset($parsed_url['host'])) {
+					if ($parsed_url['host'] != parse_url($this->config['SITE_URL'])['host']) {
+						continue;
+					}
+				}
+			}
+            
 			// Check if there is a anchor ID set in the config.
 			if ($this->config['CRAWL_ANCHORS_WITH_ID'] != "") {
 				// Check if the id is set and matches the config setting, else it will move on to the next anchor
@@ -89,15 +108,12 @@ class SitemapGenerator
 					continue;
 				}
 			}
-
-			// Check if the given url is external, if yes it will skip the iteration
-			// This code will only run if you set ALLOW_EXTERNAL_LINKS to false in the config.
-			if (!$this->config['ALLOW_EXTERNAL_LINKS']) {
-				$parsed_url = parse_url($next_url);
-				if (isset($parsed_url['host'])) {
-					if ($parsed_url['host'] != parse_url($this->config['SITE_URL'])['host']) {
-						continue;
-					}
+            
+            if ($this->config['SKIP_EXTENSIONS']) {
+				// Ignore URL if it has an extension that you have specified in the array, like jpg or png
+                $ext = pathinfo(parse_url($next_url)['path'], PATHINFO_EXTENSION);
+				if (in_array($ext, $this->config['SKIP_EXTENSIONS'])) {
+					continue;
 				}
 			}
 
@@ -146,7 +162,7 @@ class SitemapGenerator
 
 
 		// Print the amount of pages
-		echo count($pages);
+		echo "<br>" .count($pages). " pages indexed.";
 
 		foreach ($pages as $page) {
 			$xml .= "<url><loc>" . $page . "</loc>
